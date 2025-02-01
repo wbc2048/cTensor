@@ -25,12 +25,14 @@ typedef struct GradNode {
 } GradNode;
 
 Tensor Tensor_new(int numel, TensorShape shape, bool requires_grad);
-Tensor Tensor_zeros(int numel, TensorShape shape);
-Tensor Tensor_ones(int numel, TensorShape shape);
+Tensor Tensor_zeros(int numel, TensorShape shape, bool requires_grad);
+Tensor Tensor_ones(int numel, TensorShape shape, bool requires_grad);
 void Tensor_delete(Tensor self);
 
 Tensor Tensor_detach(Tensor self);
 void Tensor_backward(Tensor self, Tensor grad);
+
+void Tensor_print(Tensor self);
 
 Tensor Tensor_add(Tensor self, Tensor other);
 Tensor Tensor_sub(Tensor self, Tensor other);

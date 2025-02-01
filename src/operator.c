@@ -6,7 +6,7 @@
 static Tensor GradFn_add(Tensor self, int i) {
     // f(x, y) = x + y; f'(x) = 1; f'(y) = 1
     Tensor input = self.node->inputs[i];
-    return Tensor_ones(input.data->numel, input.shape);
+    return Tensor_ones(input.data->numel, input.shape, false);
 }
 
 static Tensor GradFn_mul(Tensor self, int i) {
@@ -41,5 +41,15 @@ Tensor Tensor_mul(Tensor self, Tensor other) {
         res.node->inputs[1] = other;
         res.node->n_inputs = 2;
     }
+    return res;
+}
+
+Tensor Tensor_mulf(Tensor self, float other) {
+    Tensor tmp = Tensor_new(self.data->numel, self.shape, false);
+    for(int i = 0; i < tmp.data->numel; i++) {
+        tmp.data->flex[i] = other;
+    }
+    Tensor res = Tensor_mul(self, tmp);
+    // Tensor_delete(tmp);
     return res;
 }
