@@ -6,9 +6,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-Tensor Tensor_new(int numel, TensorShape shape, bool requires_grad) {
+int TensorShape_numel(TensorShape shape) {
+    int numel = 1;
+    for(int i = 0; i < sizeof(TensorShape) / sizeof(shape[0]); i++) {
+        if(shape[i] == 0) break;
+        numel *= shape[i];
+    }
+    return numel;
+}
+
+int TensorShape_dim(TensorShape shape) {
+    for(int i = 0; i < sizeof(TensorShape) / sizeof(shape[0]); i++) {
+        if(shape[i] == 0) return i;
+    }
+    return sizeof(TensorShape) / sizeof(shape[0]);
+}
+
+Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
     memcpy(self.shape, shape, sizeof(TensorShape));
+    int numel = TensorShape_numel(shape);
     self.data = malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->refcount = 1;
     self.data->numel = numel;
@@ -21,15 +38,15 @@ Tensor Tensor_new(int numel, TensorShape shape, bool requires_grad) {
     return self;
 }
 
-Tensor Tensor_zeros(int numel, TensorShape shape, bool requires_grad) {
-    Tensor self = Tensor_new(numel, shape, requires_grad);
-    memset(self.data->flex, 0, sizeof(float) * numel);
+Tensor Tensor_zeros(TensorShape shape, bool requires_grad) {
+    Tensor self = Tensor_new(shape, requires_grad);
+    memset(self.data->flex, 0, sizeof(float) * self.data->numel);
     return self;
 }
 
-Tensor Tensor_ones(int numel, TensorShape shape, bool requires_grad) {
-    Tensor self = Tensor_new(numel, shape, requires_grad);
-    for(int i = 0; i < numel; i++) {
+Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
+    Tensor self = Tensor_new(shape, requires_grad);
+    for(int i = 0; i < self.data->numel; i++) {
         self.data->flex[i] = 1.0f;
     }
     return self;

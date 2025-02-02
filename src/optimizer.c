@@ -1,6 +1,7 @@
 #include "cten.h"
 #include "cten_internal.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,7 +11,6 @@ typedef struct optim_sgd {
     
     float lr;
     float momentum;
-    float weight_decay;
 
     Tensor* velocity;
 } optim_sgd;
@@ -22,19 +22,30 @@ optim_sgd* optim_sgd_new(int n_params, Tensor* params) {
     return self;
 }
 
-void optim_sgd_config(optim_sgd* self, float lr, float momentum, float weight_decay) {
+void optim_sgd_config(optim_sgd* self, float lr, float momentum) {
     self->lr = lr;
     self->momentum = momentum;
-    self->weight_decay = weight_decay;
 }
 
-static void optim_sgd_update_f(Tensor t, void* ctx){
-    optim_sgd* self = (optim_sgd*)ctx;
+void optim_sgd_zerograd(optim_sgd *self){
+    for(int i = 0; i < self->n_params; i++) {
+        Tensor t = self->params[i];
+        if(t.node != NULL && t.node->grad.data != NULL) {
+            Tensor_delete(t.node->grad);
+            t.node->grad = Tensor_zeros(t.shape, false);
+        }
+    }
 }
 
-void optim_sgd_update(optim_sgd* self, Tensor graph) {
-    int n_params = Tensor_backward_apply(graph, NULL, NULL);
-    self->n_params = n_params;
-    self->velocity = malloc(sizeof(Tensor) * n_params);
-    Tensor_backward_apply(graph, optim_sgd_update_f, self);
+void optim_sgd_step(optim_sgd* self) {
+    for(int i = 0; i < self->n_params; i++) {
+        Tensor t = self->params[i];
+        assert(self->momentum == 0);
+        assert(t.node != NULL);
+        assert(t.node->grad.data != NULL);
+        // step
+        for(int j = 0; j < t.data->numel; j++) {
+            t.data->flex[j] -= self->lr * t.node->grad.data->flex[j];
+        }
+    }
 }
