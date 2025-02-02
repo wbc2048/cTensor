@@ -19,6 +19,8 @@ optim_sgd* optim_sgd_new(int n_params, Tensor* params) {
     optim_sgd* self = malloc(sizeof(optim_sgd));
     self->n_params = n_params;
     self->params = params;
+    self->lr = 0.001f;
+    self->momentum = 0.0f;
     return self;
 }
 
