@@ -1,4 +1,5 @@
 #include "cten.h"
+#include "cten_internal.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -53,7 +54,7 @@ void Tensor_backward(Tensor self, Tensor grad) {
     if(self.node == NULL) return;
     if(grad.data == NULL) {
         assert(self.data->numel == 1);
-        grad = Tensor_ones(1, (TensorShape){0}, false);
+        grad = Tensor_ones((TensorShape){0}, false);
     }
     assert(grad.node == NULL);
     if(self.node->grad.data == NULL) {
@@ -66,6 +67,16 @@ void Tensor_backward(Tensor self, Tensor grad) {
         Tensor_backward(self.node->inputs[i], grad);
     }
     // Tensor_delete(grad);
+}
+
+int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {
+    if(self.node == NULL) return 0;
+    if(f != NULL) f(self, ctx);
+    int count = 1;
+    for(int i = 0; i < self.node->n_inputs; i++) {
+        count += Tensor_backward_apply(self.node->inputs[i], f, ctx);
+    }
+    return count;
 }
 
 void Tensor_print(Tensor self) {

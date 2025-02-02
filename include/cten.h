@@ -24,13 +24,14 @@ typedef struct GradNode {
     int n_inputs;
 } GradNode;
 
-Tensor Tensor_new(int numel, TensorShape shape, bool requires_grad);
-Tensor Tensor_zeros(int numel, TensorShape shape, bool requires_grad);
-Tensor Tensor_ones(int numel, TensorShape shape, bool requires_grad);
+Tensor Tensor_new(TensorShape shape, bool requires_grad);
+Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
+Tensor Tensor_ones(TensorShape shape, bool requires_grad);
 void Tensor_delete(Tensor self);
 
 Tensor Tensor_detach(Tensor self);
 void Tensor_backward(Tensor self, Tensor grad);
+int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx);
 
 void Tensor_print(Tensor self);
 
@@ -66,3 +67,17 @@ Tensor nn_relu(Tensor input);
 Tensor nn_sigmoid(Tensor input);
 Tensor nn_tanh(Tensor input);
 Tensor nn_softmax(Tensor input, int dim);
+
+Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
+
+
+int load_iris_dataset(const float (**X)[4], const int** y);
+
+
+
+typedef struct optim_sgd optim_sgd;
+
+optim_sgd* optim_sgd_new(int n_params, Tensor* params);
+void optim_sgd_config(optim_sgd* self, float lr, float momentum, float weight_decay);
+void optim_sgd_update(optim_sgd* self, Tensor graph);
+void optim_sgd_delete(optim_sgd* self);

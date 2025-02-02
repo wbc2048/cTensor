@@ -1,4 +1,4 @@
-#include "cten.h"
+#include "cten_internal.h"
 
 #include <math.h>
 #include <stdlib.h>
