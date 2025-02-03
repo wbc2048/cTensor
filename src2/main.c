@@ -8,7 +8,6 @@ typedef struct Model {
 } Model;
 
 Tensor model_forward(Model* model, Tensor input) {
-    // input: [None, 4]
     Tensor x = nn_linear(input, model->weight_1, model->bias_1);
     x = nn_relu(x);
     x = nn_linear(x, model->weight_2, model->bias_2);
@@ -56,15 +55,10 @@ int main() {
                 }
                 y_true.data->flex[j * n_classes + y[i + j]] = 1.0f;
             }
-            // zero gradients
             optim_sgd_zerograd(optimizer);
-            // forward pass
             Tensor y_pred = model_forward(&model, input);
-            // compute loss
             Tensor loss = nn_crossentropy(y_true, y_pred);
-            // backward pass
             Tensor_backward(loss, (Tensor){});
-            // update weights
             optim_sgd_step(optimizer);
         }
     }
