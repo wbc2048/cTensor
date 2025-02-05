@@ -108,5 +108,5 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
         }
         res.data->flex[i] = -loss;
     }
-    return Tensor_mean(res, -1);
+    return Tensor_mean(res);
 }

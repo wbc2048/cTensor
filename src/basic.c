@@ -22,6 +22,13 @@ int TensorShape_dim(TensorShape shape) {
     return sizeof(TensorShape) / sizeof(shape[0]);
 }
 
+int TensorShape_asdim(TensorShape shape, int dim) {
+    int shape_dim = TensorShape_dim(shape);
+    if(dim < 0) dim += shape_dim;
+    cten_assert(dim >= 0 && dim < shape_dim, "dim %d out of range", dim);
+    return dim;
+}
+
 int TensorShape_tostring(TensorShape shape, char* buf, int size) {
     return snprintf(buf, size, "(%d, %d, %d, %d)", shape[0], shape[1], shape[2], shape[3]);
 }

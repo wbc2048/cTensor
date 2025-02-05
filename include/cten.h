@@ -52,10 +52,10 @@ Tensor Tensor_matmul(Tensor self, Tensor other);
 Tensor Tensor_neg(Tensor self);
 Tensor Tensor_abs(Tensor self);
 
-Tensor Tensor_sum(Tensor self, int dim);
-Tensor Tensor_mean(Tensor self, int dim);
-Tensor Tensor_max(Tensor self, int dim);
-Tensor Tensor_min(Tensor self, int dim);
+Tensor Tensor_sum(Tensor self);
+Tensor Tensor_mean(Tensor self);
+Tensor Tensor_max(Tensor self);
+Tensor Tensor_min(Tensor self);
 
 int* Tensor_argmax(Tensor self, int dim);
 
@@ -89,6 +89,7 @@ void optim_sgd_delete(optim_sgd* self);
 
 int TensorShape_numel(TensorShape shape);
 int TensorShape_dim(TensorShape shape);
+int TensorShape_asdim(TensorShape shape, int dim);
 int TensorShape_tostring(TensorShape shape, char* buf, int size);
 
 void cten_begin_eval();

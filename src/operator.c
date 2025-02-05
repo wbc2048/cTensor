@@ -61,6 +61,7 @@ Tensor Tensor_mulf(Tensor self, float other) {
 }
 
 int* Tensor_argmax(Tensor self, int dim) {
+    dim = TensorShape_asdim(self.shape, dim);
     int* res = (int*)malloc(sizeof(int) * self.shape[dim]);
     for(int i = 0; i < self.shape[dim]; i++) {
         res[i] = 0;
@@ -73,19 +74,46 @@ int* Tensor_argmax(Tensor self, int dim) {
     return res;
 }
 
-Tensor Tensor_mean(Tensor self, int dim) {
-    Tensor res = Tensor_new(self.shape, self.node != NULL);
-    int self_dim = TensorShape_dim(self.shape);
-    assert(self_dim > 0);
-    int last_dim_size = self.shape[self_dim - 1];
-    int outer_size = self.data->numel / last_dim_size;
-    for(int outer = 0; outer < outer_size; outer++) {
-        float sum = 0;
-        for(int d = 0; d < last_dim_size; d++) {
-            int index = outer * last_dim_size + d;
-            sum += self.data->flex[index];
-        }
-        res.data->flex[outer] = sum / last_dim_size;
+static Tensor GradFn_mean(Tensor self, int i) {
+    // f(x) = mean(x); f'(x) = 1 / x.numel()
+    Tensor res = Tensor_new(self.shape, false);
+    for(int i = 0; i < res.data->numel; i++) {
+        res.data->flex[i] = 1.0f / self.data->numel;
+    }
+    return res;
+}
+
+Tensor Tensor_mean(Tensor self) {
+    Tensor res = Tensor_new((TensorShape){0}, self.node != NULL);
+    float sum = 0;
+    for(int i = 0; i < self.data->numel; i++) {
+        sum += self.data->flex[i];
+    }
+    res.data->flex[0] = sum / self.data->numel;
+    if(res.node != NULL) {
+        res.node->grad_fn = GradFn_mean;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
+    }
+    return res;
+}
+
+static Tensor GradFn_sum(Tensor self, int i) {
+    // f(x) = sum(x); f'(x) = 1
+    return Tensor_ones(self.shape, false);
+}
+
+Tensor Tensor_sum(Tensor self) {
+    Tensor res = Tensor_new((TensorShape){0}, self.node != NULL);
+    float sum = 0;
+    for(int i = 0; i < self.data->numel; i++) {
+        sum += self.data->flex[i];
+    }
+    res.data->flex[0] = sum;
+    if(res.node != NULL) {
+        res.node->grad_fn = GradFn_sum;
+        res.node->inputs[0] = self;
+        res.node->n_inputs = 1;
     }
     return res;
 }
