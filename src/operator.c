@@ -1,3 +1,4 @@
+#include "cten.h"
 #include "cten_internal.h"
 
 #include <assert.h>
@@ -17,6 +18,9 @@ static Tensor GradFn_mul(Tensor self, int i) {
 }
 
 Tensor Tensor_add(Tensor self, Tensor other) {
+    if(!cten_elemwise_broadcast(&self, &other)) {
+        cten_assert_shape("Tensor_add() cannot broadcast", self.shape, other.shape);
+    }
     bool require_grad = self.node != NULL || other.node != NULL;
     Tensor res = Tensor_new(self.shape, require_grad);
     for(int i = 0; i < self.data->numel; i++) {
@@ -69,8 +73,7 @@ int* Tensor_argmax(Tensor self, int dim) {
     return res;
 }
 
-
-Tensor Tensor_mean(Tensor self, int dim){
+Tensor Tensor_mean(Tensor self, int dim) {
     Tensor res = Tensor_new(self.shape, self.node != NULL);
     int self_dim = TensorShape_dim(self.shape);
     assert(self_dim > 0);
@@ -87,8 +90,7 @@ Tensor Tensor_mean(Tensor self, int dim){
     return res;
 }
 
-
-static Tensor GradFn_matmul(Tensor self, int i){
+static Tensor GradFn_matmul(Tensor self, int i) {
     Tensor _0 = self.node->inputs[i];
     Tensor _1 = self.node->inputs[1 - i];
     _0 = Tensor_detach(_0);
@@ -96,7 +98,7 @@ static Tensor GradFn_matmul(Tensor self, int i){
     return Tensor_matmul(_0, _1);
 }
 
-Tensor Tensor_matmul(Tensor self, Tensor other){
+Tensor Tensor_matmul(Tensor self, Tensor other) {
     int self_dim = TensorShape_dim(self.shape);
     int other_dim = TensorShape_dim(other.shape);
     assert(self_dim >= 2);
@@ -113,17 +115,17 @@ Tensor Tensor_matmul(Tensor self, Tensor other){
     res_shape[self_dim - 1] = p;
     Tensor res = Tensor_new(res_shape, self.node != NULL || other.node != NULL);
 
-    for(int i = 0; i < m; i++){
-        for(int j = 0; j < p; j++){
+    for(int i = 0; i < m; i++) {
+        for(int j = 0; j < p; j++) {
             float sum = 0;
-            for(int k = 0; k < n; k++){
+            for(int k = 0; k < n; k++) {
                 sum += self.data->flex[i * n + k] * other.data->flex[k * p + j];
             }
             res.data->flex[i * p + j] = sum;
         }
     }
 
-    if(res.node != NULL){
+    if(res.node != NULL) {
         res.node->grad_fn = GradFn_matmul;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;

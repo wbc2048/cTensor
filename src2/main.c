@@ -34,13 +34,12 @@ int main() {
     // create model
     Model model;
     model.weight_1 = Tensor_new((TensorShape){n_features, 32}, true);
-    model.bias_1 = Tensor_zeros((TensorShape){32}, true);
+    model.bias_1 = Tensor_zeros((TensorShape){1, 32}, true);
     model.weight_2 = Tensor_new((TensorShape){32, n_classes}, true);
-    model.bias_2 = Tensor_zeros((TensorShape){n_classes}, true);
+    model.bias_2 = Tensor_zeros((TensorShape){1, n_classes}, true);
 
     // train model
-    optim_sgd* optimizer =
-        optim_sgd_new(4, (Tensor[]){model.weight_1, model.bias_1, model.weight_2, model.bias_2});
+    optim_sgd* optimizer = optim_sgd_new(4, (Tensor*)&model);
     optim_sgd_config(optimizer, 0.001f, 0.0f);
 
     int batch_size = 8;
@@ -87,5 +86,3 @@ int main() {
 
     return 0;
 }
-
-

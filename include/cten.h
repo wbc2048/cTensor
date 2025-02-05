@@ -89,7 +89,14 @@ void optim_sgd_delete(optim_sgd* self);
 
 int TensorShape_numel(TensorShape shape);
 int TensorShape_dim(TensorShape shape);
+int TensorShape_tostring(TensorShape shape, char* buf, int size);
 
 void cten_begin_eval();
 bool cten_is_eval();
 void cten_end_eval();
+
+void cten_assert(bool cond, const char* fmt, ...);
+void cten_assert_shape(const char* title, TensorShape a, TensorShape b);
+void cten_assert_dim(const char* title, int a, int b);
+
+bool cten_elemwise_broadcast(Tensor* a, Tensor* b);

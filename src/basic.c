@@ -22,6 +22,10 @@ int TensorShape_dim(TensorShape shape) {
     return sizeof(TensorShape) / sizeof(shape[0]);
 }
 
+int TensorShape_tostring(TensorShape shape, char* buf, int size) {
+    return snprintf(buf, size, "(%d, %d, %d, %d)", shape[0], shape[1], shape[2], shape[3]);
+}
+
 Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
     memcpy(self.shape, shape, sizeof(TensorShape));
