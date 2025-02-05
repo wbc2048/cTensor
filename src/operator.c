@@ -100,7 +100,7 @@ Tensor Tensor_mean(Tensor self) {
 
 static Tensor GradFn_sum(Tensor self, int i) {
     // f(x) = sum(x); f'(x) = 1
-    return Tensor_ones(self.shape, false);
+    return Tensor_ones(self.node->inputs[i].shape, false);
 }
 
 Tensor Tensor_sum(Tensor self) {
