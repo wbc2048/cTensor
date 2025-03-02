@@ -4,8 +4,8 @@
 
 enum MemoryPoolIds {
     PoolId_Default = 0,
-    PoolId_ModelParams = 1,
-    PoolId_OptimizerParams = 2,
+    PoolId_Model = 1,
+    PoolId_Optimizer = 2,
 };
 
 typedef struct Model {
@@ -41,7 +41,7 @@ int main() {
 
     // create model
     Model model;
-    cten_begin_malloc(PoolId_ModelParams);
+    cten_begin_malloc(PoolId_Model);
     model.weight_1 = Tensor_new((TensorShape){n_features, 32}, true);
     model.bias_1 = Tensor_zeros((TensorShape){1, 32}, true);
     model.weight_2 = Tensor_new((TensorShape){32, n_classes}, true);
@@ -49,7 +49,7 @@ int main() {
     cten_end_malloc();
 
     // create optimizer
-    cten_begin_malloc(PoolId_OptimizerParams);
+    cten_begin_malloc(PoolId_Optimizer);
     optim_sgd* optimizer = optim_sgd_new(4, (Tensor*)&model);
     optim_sgd_config(optimizer, 0.001f, 0.0f);
     cten_end_malloc();
@@ -83,9 +83,11 @@ int main() {
         }
     }
 
+    // free optimizer
+    cten_free(PoolId_Optimizer);
+
     // evaluate model
     cten_begin_eval();
-
     int correct = 0;
     for(int i = n_train_samples; i < n_samples; i++) {
         cten_begin_malloc(PoolId_Default);
@@ -104,9 +106,11 @@ int main() {
         cten_end_malloc();
         cten_free(PoolId_Default);
     }
-
     printf("accuracy: %.4f\n", (float)correct / n_test_samples);
     cten_end_eval();
+
+    // free model
+    cten_free(PoolId_Model);
 
     cten_finalize();
     return 0;

@@ -62,6 +62,24 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     return self;
 }
 
+float Tensor_get(Tensor self, int i, int j, int k, int l) {
+    assert(i >= 0 && i < self.shape[0]);
+    assert(j >= 0 && j < self.shape[1]);
+    assert(k >= 0 && k < self.shape[2]);
+    assert(l >= 0 && l < self.shape[3]);
+    return self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
+                           j * self.shape[2] * self.shape[3] + k * self.shape[3] + l];
+}
+
+void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
+    assert(i >= 0 && i < self.shape[0]);
+    assert(j >= 0 && j < self.shape[1]);
+    assert(k >= 0 && k < self.shape[2]);
+    assert(l >= 0 && l < self.shape[3]);
+    self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
+                    j * self.shape[2] * self.shape[3] + k * self.shape[3] + l] = value;
+}
+
 Tensor Tensor_detach(Tensor self) {
     Tensor detached = self;
     detached.node = NULL;
@@ -123,4 +141,19 @@ void Tensor_print(Tensor self) {
         printf(")");
     }
     printf(")\n");
+}
+
+void _cten_zero_grad(Tensor* params, int n_params) {
+    for(int i = 0; i < n_params; i++) {
+        Tensor t = params[i];
+        if(t.node != NULL) {
+            if(t.node->grad.data != NULL) {
+                for(int j = 0; j < t.node->grad.data->numel; j++) {
+                    t.node->grad.data->flex[j] = 0;
+                }
+            } else {
+                t.node->grad = Tensor_zeros(t.shape, false);
+            }
+        }
+    }
 }

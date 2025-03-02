@@ -28,27 +28,19 @@ typedef struct GradNode {
 void cten_initilize();
 void cten_finalize();
 
-inline static float Tensor_get(Tensor self, int i, int j, int k, int l) {
-    assert(i >= 0 && i < self.shape[0]);
-    assert(j >= 0 && j < self.shape[1]);
-    assert(k >= 0 && k < self.shape[2]);
-    assert(l >= 0 && l < self.shape[3]);
-    return self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
-                           j * self.shape[2] * self.shape[3] + k * self.shape[3] + l];
-}
+/* TensorShape */
+int TensorShape_numel(TensorShape shape);
+int TensorShape_dim(TensorShape shape);
+int TensorShape_asdim(TensorShape shape, int dim);
+int TensorShape_tostring(TensorShape shape, char* buf, int size);
 
-inline static void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
-    assert(i >= 0 && i < self.shape[0]);
-    assert(j >= 0 && j < self.shape[1]);
-    assert(k >= 0 && k < self.shape[2]);
-    assert(l >= 0 && l < self.shape[3]);
-    self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
-                    j * self.shape[2] * self.shape[3] + k * self.shape[3] + l] = value;
-}
-
+/* Tensor Basic */
 Tensor Tensor_new(TensorShape shape, bool requires_grad);
 Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
 Tensor Tensor_ones(TensorShape shape, bool requires_grad);
+
+float Tensor_get(Tensor self, int i, int j, int k, int l);
+void Tensor_set(Tensor self, int i, int j, int k, int l, float value);
 
 Tensor Tensor_detach(Tensor self);
 void Tensor_backward(Tensor self, Tensor grad);
@@ -56,6 +48,7 @@ int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx);
 
 void Tensor_print(Tensor self);
 
+/* Tensor Operations */
 Tensor Tensor_add(Tensor self, Tensor other);
 Tensor Tensor_sub(Tensor self, Tensor other);
 Tensor Tensor_mul(Tensor self, Tensor other);
@@ -80,6 +73,7 @@ Tensor Tensor_min(Tensor self);
 
 int* Tensor_argmax(Tensor self, int dim);
 
+/* Neural Networks */
 Tensor nn_log(Tensor self);
 Tensor nn_exp(Tensor self);
 
@@ -95,8 +89,14 @@ Tensor nn_softmax(Tensor input);
 
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
 
-int load_iris_dataset(const float (**X)[4], const int** y);
+/* Memory Management */
+typedef int PoolId;
 
+void cten_begin_malloc(PoolId id);
+void cten_end_malloc();
+void cten_free(PoolId id);
+
+/* Optimizer */
 typedef struct optim_sgd optim_sgd;
 
 optim_sgd* optim_sgd_new(int n_params, Tensor* params);
@@ -105,11 +105,7 @@ void optim_sgd_zerograd(optim_sgd* self);
 void optim_sgd_step(optim_sgd* self);
 void optim_sgd_delete(optim_sgd* self);
 
-int TensorShape_numel(TensorShape shape);
-int TensorShape_dim(TensorShape shape);
-int TensorShape_asdim(TensorShape shape, int dim);
-int TensorShape_tostring(TensorShape shape, char* buf, int size);
-
+/* Misc */
 void cten_begin_eval();
 bool cten_is_eval();
 void cten_end_eval();
@@ -119,10 +115,4 @@ void cten_assert_shape(const char* title, TensorShape a, TensorShape b);
 void cten_assert_dim(const char* title, int a, int b);
 
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
-
-/* Memory Management */
-typedef int PoolId;
-
-void cten_begin_malloc(PoolId id);
-void cten_end_malloc();
-void cten_free(PoolId id);
+int load_iris_dataset(const float (**X)[4], const int** y);
