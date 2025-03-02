@@ -1,12 +1,13 @@
 #pragma once
 
+#include <assert.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef int TensorShape[4];
 typedef struct GradNode GradNode;
 
 typedef struct FloatBuffer {
-    int refcount;
     int numel;
     float flex[];
 } FloatBuffer;
@@ -24,10 +25,30 @@ typedef struct GradNode {
     int n_inputs;
 } GradNode;
 
+void cten_initilize();
+void cten_finalize();
+
+inline float Tensor_get(Tensor self, int i, int j, int k, int l) {
+    assert(i >= 0 && i < self.shape[0]);
+    assert(j >= 0 && j < self.shape[1]);
+    assert(k >= 0 && k < self.shape[2]);
+    assert(l >= 0 && l < self.shape[3]);
+    return self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
+                           j * self.shape[2] * self.shape[3] + k * self.shape[3] + l];
+}
+
+inline void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
+    assert(i >= 0 && i < self.shape[0]);
+    assert(j >= 0 && j < self.shape[1]);
+    assert(k >= 0 && k < self.shape[2]);
+    assert(l >= 0 && l < self.shape[3]);
+    self.data->flex[i * self.shape[1] * self.shape[2] * self.shape[3] +
+                    j * self.shape[2] * self.shape[3] + k * self.shape[3] + l] = value;
+}
+
 Tensor Tensor_new(TensorShape shape, bool requires_grad);
 Tensor Tensor_zeros(TensorShape shape, bool requires_grad);
 Tensor Tensor_ones(TensorShape shape, bool requires_grad);
-void Tensor_delete(Tensor self);
 
 Tensor Tensor_detach(Tensor self);
 void Tensor_backward(Tensor self, Tensor grad);
@@ -74,9 +95,7 @@ Tensor nn_softmax(Tensor input);
 
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
 
-
 int load_iris_dataset(const float (**X)[4], const int** y);
-
 
 typedef struct optim_sgd optim_sgd;
 
@@ -85,7 +104,6 @@ void optim_sgd_config(optim_sgd* self, float lr, float momentum);
 void optim_sgd_zerograd(optim_sgd* self);
 void optim_sgd_step(optim_sgd* self);
 void optim_sgd_delete(optim_sgd* self);
-
 
 int TensorShape_numel(TensorShape shape);
 int TensorShape_dim(TensorShape shape);
@@ -101,3 +119,10 @@ void cten_assert_shape(const char* title, TensorShape a, TensorShape b);
 void cten_assert_dim(const char* title, int a, int b);
 
 bool cten_elemwise_broadcast(Tensor* a, Tensor* b);
+
+/* Memory Management */
+typedef int PoolId;
+
+void cten_begin_malloc(PoolId id);
+void cten_end_malloc();
+void cten_free(PoolId id);

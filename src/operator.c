@@ -56,7 +56,6 @@ Tensor Tensor_mulf(Tensor self, float other) {
         tmp.data->flex[i] = other;
     }
     Tensor res = Tensor_mul(self, tmp);
-    // Tensor_delete(tmp);
     return res;
 }
 

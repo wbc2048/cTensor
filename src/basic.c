@@ -37,11 +37,10 @@ Tensor Tensor_new(TensorShape shape, bool requires_grad) {
     Tensor self;
     memcpy(self.shape, shape, sizeof(TensorShape));
     int numel = TensorShape_numel(shape);
-    self.data = malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
-    self.data->refcount = 1;
+    self.data = _cten_malloc(sizeof(FloatBuffer) + sizeof(float) * numel);
     self.data->numel = numel;
-    if(requires_grad) {
-        self.node = malloc(sizeof(GradNode));
+    if(requires_grad && !cten_is_eval()) {
+        self.node = _cten_malloc(sizeof(GradNode));
         memset(self.node, 0, sizeof(GradNode));
     } else {
         self.node = NULL;
@@ -63,17 +62,8 @@ Tensor Tensor_ones(TensorShape shape, bool requires_grad) {
     return self;
 }
 
-void Tensor_delete(Tensor self) {
-    if(--self.data->refcount == 0) free(self.data);
-    if(self.node != NULL) {
-        if(self.node->grad.data != NULL) Tensor_delete(self.node->grad);
-        free(self.node);
-    }
-}
-
 Tensor Tensor_detach(Tensor self) {
     Tensor detached = self;
-    detached.data->refcount++;
     detached.node = NULL;
     return detached;
 }
@@ -94,7 +84,6 @@ void Tensor_backward(Tensor self, Tensor grad) {
         grad = Tensor_mul(grad, self.node->grad_fn(self, i));
         Tensor_backward(self.node->inputs[i], grad);
     }
-    // Tensor_delete(grad);
 }
 
 int Tensor_backward_apply(Tensor self, void (*f)(Tensor, void*), void* ctx) {

@@ -33,7 +33,6 @@ void optim_sgd_zerograd(optim_sgd *self){
     for(int i = 0; i < self->n_params; i++) {
         Tensor t = self->params[i];
         if(t.node != NULL && t.node->grad.data != NULL) {
-            Tensor_delete(t.node->grad);
             t.node->grad = Tensor_zeros(t.shape, false);
         }
     }
