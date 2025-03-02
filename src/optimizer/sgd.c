@@ -30,10 +30,10 @@ void optim_sgd_config(optim_sgd* self, float lr, float momentum) {
 void optim_sgd_zerograd(optim_sgd* self) { _cten_zero_grad(self->params, self->n_params); }
 
 void optim_sgd_step(optim_sgd* self) {
+    assert(self->momentum == 0);
     for(int i = 0; i < self->n_params; i++) {
         Tensor t = self->params[i];
-        assert(self->momentum == 0);
-        assert(t.node != NULL);
+        if(t.node == NULL) continue;
         assert(t.node->grad.data != NULL);
         // step
         for(int j = 0; j < t.data->numel; j++) {

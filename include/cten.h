@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef int TensorShape[4];
 typedef struct GradNode GradNode;
@@ -71,7 +72,7 @@ Tensor Tensor_mean(Tensor self);
 Tensor Tensor_max(Tensor self);
 Tensor Tensor_min(Tensor self);
 
-int* Tensor_argmax(Tensor self, int dim);
+void Tensor_argmax(Tensor self, int* out);
 
 /* Neural Networks */
 Tensor nn_log(Tensor self);
@@ -90,7 +91,7 @@ Tensor nn_softmax(Tensor input);
 Tensor nn_crossentropy(Tensor y_true, Tensor y_pred);
 
 /* Memory Management */
-typedef int PoolId;
+typedef int64_t PoolId;
 
 void cten_begin_malloc(PoolId id);
 void cten_end_malloc();

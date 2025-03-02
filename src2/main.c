@@ -57,7 +57,9 @@ int main() {
     // train model
     int batch_size = 8;
     for(int epoch = 0; epoch < 3; epoch++) {
+        printf("==> epoch: %d\n", epoch);
         for(int i = 0; i < n_train_samples; i += batch_size) {
+            printf("    batch: %d/%d samples\n", i, n_train_samples);
             cten_begin_malloc(PoolId_Default);
             // prepare input and target
             Tensor input = Tensor_new((TensorShape){batch_size, n_features}, false);
@@ -102,9 +104,9 @@ int main() {
         Tensor y_pred = Model_forward(&model, input);
         Tensor loss = nn_crossentropy(y_true, y_pred);
         // calculate accuracy
-        int* pred_classes = Tensor_argmax(y_pred, -1);
+        int pred_classes[1];
+        Tensor_argmax(y_pred, pred_classes);
         if(pred_classes[0] == y[i]) correct++;
-        free(pred_classes);
         cten_end_malloc();
         // free temporary tensors
         cten_free(PoolId_Default);

@@ -21,12 +21,12 @@ Tensor Tensor_add(Tensor self, Tensor other) {
     if(!cten_elemwise_broadcast(&self, &other)) {
         cten_assert_shape("Tensor_add() cannot broadcast", self.shape, other.shape);
     }
-    bool require_grad = self.node != NULL || other.node != NULL;
-    Tensor res = Tensor_new(self.shape, require_grad);
+    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] + other.data->flex[i];
     }
-    if(require_grad) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_add;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
@@ -36,12 +36,12 @@ Tensor Tensor_add(Tensor self, Tensor other) {
 }
 
 Tensor Tensor_mul(Tensor self, Tensor other) {
-    bool require_grad = self.node != NULL || other.node != NULL;
-    Tensor res = Tensor_new(self.shape, require_grad);
+    bool requires_grad = !cten_is_eval() && (self.node != NULL || other.node != NULL);
+    Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = self.data->flex[i] * other.data->flex[i];
     }
-    if(require_grad) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_mul;
         res.node->inputs[0] = self;
         res.node->inputs[1] = other;
@@ -59,18 +59,22 @@ Tensor Tensor_mulf(Tensor self, float other) {
     return res;
 }
 
-int* Tensor_argmax(Tensor self, int dim) {
-    dim = TensorShape_asdim(self.shape, dim);
-    int* res = (int*)malloc(sizeof(int) * self.shape[dim]);
-    for(int i = 0; i < self.shape[dim]; i++) {
-        res[i] = 0;
-        for(int j = 0; j < self.shape[dim]; j++) {
-            float _0 = self.data->flex[res[i] * self.shape[dim] + i];
-            float _1 = self.data->flex[j * self.shape[dim] + i];
-            if(_0 < _1) res[i] = j;
+void Tensor_argmax(Tensor self, int* out) {
+    // reduce last dim
+    int last_dim = self.shape[TensorShape_dim(self.shape) - 1];
+    int n = TensorShape_numel(self.shape) / last_dim;
+    for(int i = 0; i < n; i++) {
+        float* p = self.data->flex + i * last_dim;
+        float max_val = p[0];
+        int max_idx = 0;
+        for(int j = 1; j < last_dim; j++) {
+            if(p[j] > max_val) {
+                max_val = p[j];
+                max_idx = j;
+            }
         }
+        out[i] = max_idx;
     }
-    return res;
 }
 
 static Tensor GradFn_mean(Tensor self, int i) {

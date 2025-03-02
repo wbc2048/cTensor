@@ -13,7 +13,7 @@ void cten_assert(bool cond, const char* fmt, ...) {
         vfprintf(stderr, fmt, args);
         fprintf(stderr, "\n");
         va_end(args);
-        exit(1);
+        abort();
     }
 }
 
