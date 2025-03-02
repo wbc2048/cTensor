@@ -22,12 +22,13 @@ static Tensor GradFn_relu(Tensor self, int i) {
 }
 
 Tensor nn_relu(Tensor self) {
-    Tensor res = Tensor_new(self.shape, self.node != NULL);
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
     for(int i = 0; i < self.data->numel; i++) {
         res.data->flex[i] = fmaxf(0, self.data->flex[i]);
     }
 
-    if(self.node != NULL) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_relu;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
@@ -51,8 +52,8 @@ static Tensor GradFn_softmax(Tensor self, int i) {
 }
 
 Tensor nn_softmax(Tensor self) {
-    Tensor res = Tensor_new(self.shape, self.node != NULL);
-
+    bool requires_grad = !cten_is_eval() && self.node != NULL;
+    Tensor res = Tensor_new(self.shape, requires_grad);
     int self_dim = TensorShape_dim(self.shape);
     assert(self_dim > 0);
     int last_dim_size = self.shape[self_dim - 1];
@@ -79,12 +80,11 @@ Tensor nn_softmax(Tensor self) {
         }
     }
 
-    if(self.node != NULL) {
+    if(requires_grad) {
         res.node->grad_fn = GradFn_softmax;
         res.node->inputs[0] = self;
         res.node->n_inputs = 1;
     }
-
     return res;
 }
 
@@ -100,11 +100,13 @@ Tensor nn_crossentropy(Tensor y_true, Tensor y_pred) {
     assert(n_samples == y_pred.shape[0]);
     assert(n_classes == y_pred.shape[1]);
 
-    Tensor res = Tensor_new((TensorShape){n_samples}, true);
+    bool requires_grad = !cten_is_eval() && (y_true.node != NULL || y_pred.node != NULL);
+    Tensor res = Tensor_new((TensorShape){n_samples}, requires_grad);
     for(int i = 0; i < n_samples; i++) {
         float loss = 0;
         for(int j = 0; j < n_classes; j++) {
-            loss += y_true.data->flex[i * n_classes + j] * logf(y_pred.data->flex[i * n_classes + j]);
+            loss +=
+                y_true.data->flex[i * n_classes + j] * logf(y_pred.data->flex[i * n_classes + j]);
         }
         res.data->flex[i] = -loss;
     }
