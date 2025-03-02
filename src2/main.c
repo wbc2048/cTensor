@@ -91,19 +91,22 @@ int main() {
     int correct = 0;
     for(int i = n_train_samples; i < n_samples; i++) {
         cten_begin_malloc(PoolId_Default);
+        // prepare input and target
         Tensor input = Tensor_new((TensorShape){1, n_features}, false);
         Tensor y_true = Tensor_zeros((TensorShape){1, n_classes}, false);
         for(int j = 0; j < n_features; j++) {
-            input.data->flex[j] = X[i][j];
+            Tensor_set(input, 0, j, 0, 0, X[i][j]);
         }
-        y_true.data->flex[y[i]] = 1.0f;
-
+        Tensor_set(y_true, 0, y[i], 0, 0, 1.0f);
+        // forward pass
         Tensor y_pred = Model_forward(&model, input);
         Tensor loss = nn_crossentropy(y_true, y_pred);
+        // calculate accuracy
         int* pred_classes = Tensor_argmax(y_pred, -1);
         if(pred_classes[0] == y[i]) correct++;
         free(pred_classes);
         cten_end_malloc();
+        // free temporary tensors
         cten_free(PoolId_Default);
     }
     printf("accuracy: %.4f\n", (float)correct / n_test_samples);
