@@ -28,7 +28,7 @@ typedef struct GradNode {
 void cten_initilize();
 void cten_finalize();
 
-inline float Tensor_get(Tensor self, int i, int j, int k, int l) {
+inline static float Tensor_get(Tensor self, int i, int j, int k, int l) {
     assert(i >= 0 && i < self.shape[0]);
     assert(j >= 0 && j < self.shape[1]);
     assert(k >= 0 && k < self.shape[2]);
@@ -37,7 +37,7 @@ inline float Tensor_get(Tensor self, int i, int j, int k, int l) {
                            j * self.shape[2] * self.shape[3] + k * self.shape[3] + l];
 }
 
-inline void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
+inline static void Tensor_set(Tensor self, int i, int j, int k, int l, float value) {
     assert(i >= 0 && i < self.shape[0]);
     assert(j >= 0 && j < self.shape[1]);
     assert(k >= 0 && k < self.shape[2]);
