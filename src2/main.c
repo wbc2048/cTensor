@@ -91,6 +91,12 @@ int main() {
     // evaluate model
     cten_begin_eval();
     int correct = 0;
+    int class_counts[3] = {0};  // Count predictions per class
+    
+    printf("\n------ TEST SET PREDICTIONS ------\n");
+    printf("Sample | Actual | Predicted | Result\n");
+    printf("--------------------------------\n");
+    
     for(int i = n_train_samples; i < n_samples; i++) {
         cten_begin_malloc(PoolId_Default);
         // prepare input and target
@@ -106,12 +112,26 @@ int main() {
         // calculate accuracy
         int pred_classes[1];
         Tensor_argmax(y_pred, pred_classes);
+        
+        // Track predictions per class
+        class_counts[pred_classes[0]]++;
+        
+        // Print prediction details
+        printf("  %2d   |   %d    |    %d     |   %s\n", 
+               i - n_train_samples, y[i], pred_classes[0],
+               pred_classes[0] == y[i] ? "✓" : "✗");
+        
         if(pred_classes[0] == y[i]) correct++;
         cten_end_malloc();
         // free temporary tensors
         cten_free(PoolId_Default);
     }
-    printf("accuracy: %.4f\n", (float)correct / n_test_samples);
+    
+    printf("\nPrediction distribution: [%d, %d, %d]\n",
+           class_counts[0], class_counts[1], class_counts[2]);
+    
+    printf("\nAccuracy: %.4f (%d/%d)\n", 
+           (float)correct / n_test_samples, correct, n_test_samples);
     cten_end_eval();
 
     // free model
